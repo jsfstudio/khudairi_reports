@@ -1,7 +1,6 @@
 import os
 import streamlit as st
 import openai
-import base64
 import requests
 from my_prompts import caption_prompt, article_prompt
 
@@ -11,9 +10,9 @@ def create_temp_file(uploaded_file):
         f.write(uploaded_file.getbuffer())
     return temp_file_path
 
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
+def encode_file(file_path):
+    with open(file_path, "rb") as file:
+        return base64.b64encode(file.read()).decode('utf-8')
 
 def process_generate_button(input_data, api_key, prompt, file=True):
     with st.spinner("Generating... please wait..."):
@@ -22,12 +21,12 @@ def process_generate_button(input_data, api_key, prompt, file=True):
 
         if file:
             temp_file_path = create_temp_file(input_data)
-            base64_image = encode_image(temp_file_path)
+            base64_file = encode_file(temp_file_path)
             prompt = {
                 "role": "user",
                 "content": [
                     {"type": "text", "text": caption_prompt},
-                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+                    {"type": "file", "file": {"name": input_data.name, "data": base64_file}}
                 ]
             }
         else:
@@ -68,16 +67,16 @@ def check_key_validity(api_key):
 def main():
     st.title("Cogmerce Social Media")
 
-    goal = st.radio("What to Generate?", ('Caption', 'Article'))
+    goal = st.radio("What to Generate?", ('Summary',))
 
-    api_key = st.text_input("Enter API key here, or contact the author if you don't have one.")
+    api_key = st.text_input("Enter Password here, or contact the author if you don't have one.")
     st.markdown('[Author email](mailto:connect@jsfstudio.co)')
     
-    st.sidebar.markdown('# Made by: [JSF Studio]')
+    st.sidebar.markdown('# Made by: [Cognitive Commerce]')
     
-    if goal == 'Caption':
-        uploaded_file = st.file_uploader("Upload the image file", type=['png', 'jpg'])
-        st.sidebar.markdown('# Git link: [Caption Generator]')
+    if goal == 'Summary':
+        uploaded_file = st.file_uploader("Upload the file", type=['pdf', 'docx'])
+        st.sidebar.markdown('# Git link: [Summary Report Generator]')
     else:
         user_input = st.text_input("Enter the Topic, Purpose and any other Instructions")
         st.sidebar.markdown('# Git link: [Article Writing]')
@@ -87,11 +86,11 @@ def main():
             st.warning('Key not valid or API is down.')
             return
 
-        if goal == 'Caption':
+        if goal == 'Summary':
             if uploaded_file is not None:
                 process_generate_button(uploaded_file, api_key, caption_prompt, file=True)
             else:
-                st.warning("Please upload an image file.")
+                st.warning("Please upload a PDF or Docx file.")
         else:
             if user_input:
                 formatted_prompt = article_prompt.format(text=user_input)

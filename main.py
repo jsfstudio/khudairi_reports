@@ -2,6 +2,7 @@ import os
 import streamlit as st
 import openai
 import requests
+import base64
 from my_prompts import caption_prompt, article_prompt
 
 def create_temp_file(uploaded_file):
